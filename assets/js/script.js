@@ -1,5 +1,26 @@
 var tasks = {};
 
+var auditTask = function(taskEl) {
+  // get date from task element
+  var date = $(taskEl).find("span").text().trim();
+
+  //convert to moment object at 5:00pm local time "L", end of the work day
+  var time = moment(date, "L").set("hour", 17); // 17 is 5pm on the 24 hour clock
+  
+  //remove any old classes from the element
+  $(taskEl).removeClass("list-group-item-warning list-group-item-danger");
+
+  //apply new class is task is near/over due date
+  if (moment().isAfter(time)) {
+    $(taskEl).addClass("list-group-item-danger");
+  }
+  else if (Math.abs(moment().diff(time, "days")) <= 2) {
+    $(taskEl).addClass("list-group-item-warning");
+  }
+
+  
+};
+
 var createTask = function(taskText, taskDate, taskList) {
   // create elements that make up a task item
   var taskLi = $("<li>").addClass("list-group-item");
@@ -12,6 +33,9 @@ var createTask = function(taskText, taskDate, taskList) {
 
   // append span and p element to parent li
   taskLi.append(taskSpan, taskP);
+
+  //check due date
+  auditTask(taskLi);
 
 
   // append to ul list on the page
@@ -102,12 +126,21 @@ $(".list-group").on("click", "span", function() {
   //swap out element
   $(this).replaceWith(dateInput);
 
+  // enable jquery ui datepicker to edit the date on a task that already has been created
+  dateInput.datepicker({
+    minDate: 1,
+    onClose: function() {
+      //when calendar is closed, force a "change" event on the 'dateInput'
+      $(this).trigger("change");
+    }
+  });
+
   //automatically focus on new element
   dateInput.trigger("focus");
 
   //convert it back to when the user clicks outside
   //value of data was changed
-  $(".list-group").on("blur", "input[type='text']", function() {
+  $(".list-group").on("change", "input[type='text']", function() {
     //get current text
     var date = $(this)
     .val()
@@ -135,6 +168,9 @@ $(".list-group").on("click", "span", function() {
 
     //replace input with span element
     $(this).replaceWith(taskSpan);
+
+    //pass taks <li> element into auditTask() to check new due date
+    auditTask($(taskSpan).closest(".list-group-item"));
   });
 });
 
@@ -188,9 +224,9 @@ $("#remove-tasks").on("click", function() {
 // load tasks for the first time
 loadTasks();
 
-// sortable function allows us to drag and drop the ul elements with class .list-group within the .card elements
+
 $(".card .list-group").sortable({
-  connectWith: $(".card .list-group"),
+  connectWith: $(".card .list-group"), // sortable function allows us to drag and drop the ul elements with class .list-group within the .card elements
   scroll: false,
   tolerance: "pointer",
   helper: "clone",
@@ -255,4 +291,9 @@ $("#trash").droppable({
   out: function(event, ui) {
     console.log("out");
   },
-})
+});
+
+$("#modalDueDate").datepicker({ // datepicker() gives us the datepicker functionality so users can pick a date instead of typing that in, this is loaded from the jquery UI library.
+  minDate: 1 // this indicates how many days after the current date we want the limit to kick in, dates that have already passed will be grayed out
+}); 
+
