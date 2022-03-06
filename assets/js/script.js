@@ -188,4 +188,71 @@ $("#remove-tasks").on("click", function() {
 // load tasks for the first time
 loadTasks();
 
+// sortable function allows us to drag and drop the ul elements with class .list-group within the .card elements
+$(".card .list-group").sortable({
+  connectWith: $(".card .list-group"),
+  scroll: false,
+  tolerance: "pointer",
+  helper: "clone",
+  //activate will trigger in the console once a drag is started
+  activate: function(event) {
+    // console.log("activate", this);
+  },
+  //deactivate will trigger in the console once a drag is stopped
+  deactivate: function(event) {
+    // console.log("deactivate", this);
+  },
+  //over will trigger once a list item is over a certain list but not dropped
+  over: function(event) {
+    // console.log("over", this);
+  },
+  //out is triggered once a list item is out of a list
+  out: function(event) {
+    // console.log("out", this);
+  },
+  //update triggers once list items have changed
+  update: function(event) {
+    var tempArr = [];
+    //loop over current set of children in sortable list
+    $(this).children().each(function() {
+      var text = $(this)
+        .find("p")
+        .text()
+        .trim();
 
+      var date = $(this)
+        .find("span")
+        .text()
+        .trim();
+
+      //add task data to the temp array as an object
+      tempArr.push({
+        text: text,
+        date: date
+      });
+    });
+
+    var arrName = $(this)
+      .attr("id")
+      .replace("list-", ""); //this will keep the items in their new spots when you refresh the browser. we use "list-" which matches an id on all the ul tasks in the HTML.
+
+    //update array on tasks object and save
+    tasks[arrName] = tempArr;
+    saveTasks();  
+  }
+});
+
+$("#trash").droppable({
+  accept: ".card .list-group-item", //trash accepts .card .list-group-item
+  tolernace: "touch", // touch - draggable overlaps the droppable any amount
+  drop: function(event, ui) { // ui object that contains a property called draggable, object that represents a draggable element.
+    ui.draggable.remove(); // this will remove the item completely from the dom.  no need to recall savetasks(), removing the tasks triggers sortable update().
+    console.log("drop");
+  },
+  over: function(event, ui) {
+    console.log("over");
+  },
+  out: function(event, ui) {
+    console.log("out");
+  },
+})
