@@ -17,7 +17,7 @@ var auditTask = function(taskEl) {
   else if (Math.abs(moment().diff(time, "days")) <= 2) {
     $(taskEl).addClass("list-group-item-warning");
   }
-
+console.log(taskEl);
   
 };
 
@@ -191,7 +191,7 @@ $("#task-form-modal").on("shown.bs.modal", function() {
 });
 
 // save button in modal was clicked
-$("#task-form-modal .btn-primary").click(function() {
+$("#task-form-modal .btn-save").click(function() {
   // get form values
   var taskText = $("#modalTaskDescription").val();
   var taskDate = $("#modalDueDate").val();
@@ -232,19 +232,23 @@ $(".card .list-group").sortable({
   helper: "clone",
   //activate will trigger in the console once a drag is started
   activate: function(event) {
-    // console.log("activate", this);
+    $(this).addClass("dropover");
+    $(".bottom-trash").addClass("bottom-trash-drag");
   },
   //deactivate will trigger in the console once a drag is stopped
   deactivate: function(event) {
-    // console.log("deactivate", this);
+    $(this).removeClass("dropover");
+    $(".bottom-trash").removeClass("bottom-trash-drag");
   },
   //over will trigger once a list item is over a certain list but not dropped
   over: function(event) {
-    // console.log("over", this);
+    $(event.target).addClass("dropover-active");
+    $(".bottom-trash").addClass("bottom-trash-active");
   },
   //out is triggered once a list item is out of a list
   out: function(event) {
-    // console.log("out", this);
+    $(event.target).removeClass("dropover-active");
+    $(".bottom-trash").removeClass("bottom-trash-active");
   },
   //update triggers once list items have changed
   update: function(event) {
@@ -297,3 +301,8 @@ $("#modalDueDate").datepicker({ // datepicker() gives us the datepicker function
   minDate: 1 // this indicates how many days after the current date we want the limit to kick in, dates that have already passed will be grayed out
 }); 
 
+setInterval(function() {
+  $(".card .list-group-item").each(function(index, el) {
+    auditTask(el);
+  });
+}, (1000 * 60) * 30); //gives us 30 minutes
